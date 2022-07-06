@@ -12,6 +12,7 @@ from datpy.filetool.output_file import logs
 
 class MobifoneInfo:
     name = 'Mobifone'
+    source = "FTP_SERVER"
     def __init__(self,filedir,cfg):
         self.schema = cfg['schema']
         self.tablename = cfg['tablename']
@@ -72,8 +73,8 @@ class MobifoneInfo:
                     UPDATE_DATE = lambda t: pd.to_datetime(t['UPDATE_DATE'], dayfirst=True, errors= 'coerce'),
                     SUB_TYPE = lambda t: t['PHONE_NUMBER'].map(lambda x: Phone(x,error = 'ignore').typephone),
                     CARRIER =MobifoneInfo.name,
-                    IMPORT_MONTH = import_month
-                    )
+                    IMPORT_MONTH = import_month,
+                    SOURCE = MobifoneInfo.source)
             encrypt_df(data,'PHONE_NUMBER','IDCARD')
             return data.reindex(cols, axis = 1)
         except Exception as e:
