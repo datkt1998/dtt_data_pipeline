@@ -1,0 +1,89 @@
+# data engineer for DTT_SD profject
+# update config: 24-06-2022
+
+---
+# dev environment 
+database:
+  db_target:
+    type: "oracle"
+    hostname: "192.168.18.32"
+    port: "1521"
+    service_name: "DTT"
+    username: "dtt_sd"
+    password: "hct5Kg"
+  db_source:
+    type: "ftp"
+    hostname: "192.168.40.8"
+    username: "datatech"
+    password: "datatech@123456"
+
+folder:
+  project: "../.."
+  data_save: "../../2. DATA"
+
+data:
+  telco_info:
+    name: 'telco_info'
+    folder:
+      mobifone:
+        name: 'mobifone'
+        filecode: "datacode/3_telco/1_info/runfile.py"
+        classname: 'MobifoneInfo'
+        local_output: "../../2. DATA/3_telco/1_info/1_mobifone"
+        ftp_store: "array1/datatech/1. TELCO/Subcriber Telco Info/TTTB Mobi/Final"
+      viettel:
+        name: 'viettel'
+        filecode: "datacode/3_telco/1_info/runfile.py"
+        classname: 'ViettelInfo'
+        local_output: "../../2. DATA/3_telco/1_info/2_viettel_2019" 
+        # change folder if get news datafile
+        ftp_store: "array1/datatech/1. TELCO/Subcriber Telco Info/TTTB Viettel"
+        db_source:
+          type: "oracle"
+          hostname: "192.168.18.32"
+          port: "1521"
+          service_name: "score"
+          username: "score"
+          password: "Vmg02092021"
+          tablename: 'RAW_VIETTEL_DATA_2021'
+    dataSchema:
+      DTT_SD:
+        DTTSD_TELCO_INFO:
+          PHONE_NUMBER: "varchar2(40) NOT NULL"
+          FULLNAME: "varchar2(400)"
+          DOB: "date"
+          GERDER: "varchar2(2)"
+          ADDRESS: "varchar2(800)"
+          PROVINCE: "varchar2(50)"
+          NATIONALITY: "varchar2(50)"
+          IDCARD: "varchar2(40)"
+          IDCARD_ISSUEDATE: "date"
+          IDCARD_ADDRESS: "varchar2(800)"
+          IDCARD_TYPE: "varchar2(15)"
+          EMAIL: "varchar2(100)"
+          CARRIER: "varchar2(30)"
+          # thương hiệu điện thoại
+          PHONE_BRAND: "varchar2(50)"
+          # tên loại điện thoại
+          PHONE_TYPE: "varchar2(150)"
+          # loại thuê bao di động hay máy bàn
+          SUB_TYPE: "varchar2(30)"
+          # loại trả trước hay trả sau
+          PAY_TYPE: "varchar2(10)"
+          # trạng thái thuê bao
+          SUB_STATUS: "varchar2(10)"
+          # sim 4g 3g
+          SIM_TYPE: "varchar2(5)"
+          # chi nhánh giao dịch mở thuê bao
+          BRANCH: "varchar2(255)"
+          # gói cước di động
+          PACKAGE_TYPE: "varchar2(40)"
+          ACTIVE_DATE: "date"
+          UPDATE_DATE: "date"
+          IMPORT_MONTH: "varchar2(6)"
+          SOURCE: "varchar2(50)"
+
+
+...
+---
+# prod environme

@@ -1,0 +1,7 @@
+git add *
+
+git status -s
+
+git commit -m "điền nội dung commit vào đây"
+
+git push origin main

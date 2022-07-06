@@ -1,0 +1,30 @@
+# this is config test in yaml file
+
+# the start new document in below code (there may be many documents in single yaml file)
+---
+doc_version: 1
+data:
+  string_conf: "this is config"
+  num_conf: 1.2
+  int_conf: 10
+  dict_conf:
+    key1: val1
+    key2: '100'
+  list_conf:
+    - 'val1'
+    - 'val2'
+    - 'val3'
+  bool_conf: true
+  time_conf: 
+    canonical:        2001-12-15T02:59:43.1Z
+    valid_iso8601:    2001-12-14t21:59:43.10-05:00
+    no_time_zone: 2001-12-15 2:59:43.10
+    date: 2002-12-14
+
+# end the doc
+# ...
+
+# # NEW document in yaml file
+# ---
+# doc_version: 2
+# ...
