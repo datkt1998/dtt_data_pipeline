@@ -205,7 +205,7 @@ class Database:
             dty = Database.getdtype(dataSchema)
             data.to_sql(tablename.lower(),schema = schema, con = self.engine, if_exists = if_exists, 
                         chunksize = chunksize, index=False, dtype = dty)
-            # hp.cfg['log'].info(f"Uploaded ('{if_exists}') data to {tablename.upper()} table in {schema.upper()} with chunksize {chunksize}")
+            # hp.cfg['log'].info(f"Uploaded ('{if_exists}') data to {tablename.upper()} table in {schema.upper()} from {data.index[0]} to {data.index[-1]}")
         except Exception as e:
             hp.cfg['log'].error(f"Fail to upload data {filename} from {data.index[0]} to {data.index[-1]} with error: {e}")
 

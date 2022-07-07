@@ -108,7 +108,8 @@ class ViettelInfo:
         if self.filedir is not None:
             self.filename = os.path.basename(filedir)
             self.datacols = sorted(pd.read_csv(filedir, on_bad_lines='skip',sep = "|", nrows= 1).columns.tolist())
-            self.datachunk = pd.read_csv(filedir, on_bad_lines='skip',sep = "|", chunksize =self.chunksize)
+            self.datachunk = pd.read_csv(filedir, on_bad_lines='skip',sep = "|", chunksize =self.chunksize, offset_rows = 79*self.chunksize)
+            print(f'OFFSET {79*self.chunksize} ROWS')
         else:
             self.filename = cfg['folder_config'].db_source.tablename
             self.datacols = sorted(cfg['source_oracle_server'].read(table_name=self.filename, n_records = 1).columns.tolist())
