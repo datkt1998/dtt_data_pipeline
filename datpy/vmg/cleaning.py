@@ -178,7 +178,7 @@ class text:
             "Yh9tPt/GcByge8grvB8R/w==",
         ]
             x=x.strip()
-            condi = (x.lower() in ["","null","nan","#n/a","#ref!",'none','.',',','n/a','<na>']) or (x in list_nan_encrypt)
+            condi = (x.lower() in ["","null","nan","#n/a","#ref!",'none','.',',','n/a','<na>','(null)']) or (x in list_nan_encrypt)
             if condi :
                 return np.nan
             else:

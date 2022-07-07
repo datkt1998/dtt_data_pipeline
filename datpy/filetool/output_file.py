@@ -104,11 +104,13 @@ def check_file_processed(listdir,logFolder):
     print('Count files will process:', len(not_processed_list))
     return not_processed_list
 
-def write_processedFile(filedir,logFolder):
+def write_processedFile(filedir = None,logFolder = None):
     df = pd.DataFrame({'filedir':filedir,'process_datetime':str(datetime.now())},index=[0])
     output_file = os.path.join(logFolder,'processed_filedir.csv')
     df.to_csv(output_file,index=False,sep="|", mode='a', header=not os.path.exists(output_file))
-    hp.cfg['log'].info(f"Append {os.path.basename(filedir)} to processed_filedir.csv")
+    hp.cfg['log'].info(f"Append {filedir} to processed_filedir.csv")
+
+
 
 
 

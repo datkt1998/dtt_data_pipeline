@@ -43,3 +43,7 @@ def decrypt(data, max_data=50000,use_tqdm = False):
 def encrypt_df(df, *cols):
     for col in cols :
         df[col] = encrypt(df[col].tolist())
+
+def decrypt_df(df, *cols):
+    for col in cols :
+        df[col] = decrypt(df[col].tolist())

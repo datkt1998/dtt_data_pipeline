@@ -147,8 +147,9 @@ class Database:
                 self.engine = sqlite3.connect(cf.path)
                 hp.cfg['log'].info(f"Success connecting to database {cf.path}")
             
-        except:
+        except Exception as e:
             hp.cfg['log'].error('Fail to connect to database !')
+            raise e
 
     # @runtime
     def drop(self, tablename,schema=None):
@@ -184,9 +185,6 @@ class Database:
                 hp.cfg['log'].info(f'Created {tablename.upper()} table in {schema.upper()}')
             except:
                 hp.cfg['log'].error(f'Fail to created {tablename.upper()} table in {schema.upper()}')
-
-    # def validate_data(data,dataSchema):
-    #     return True
 
     def getdtype(dataSchema):
         def convert_tool(x:str):

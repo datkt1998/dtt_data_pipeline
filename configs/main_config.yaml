@@ -44,7 +44,7 @@ data:
           port: "1521"
           service_name: "score"
           username: "score"
-          password: "Vmg02092021"
+          password: "Vmg102021"
           tablename: 'RAW_VIETTEL_DATA_2021'
     dataSchema:
       DTT_SD:
@@ -73,7 +73,7 @@ data:
           # trạng thái thuê bao
           SUB_STATUS: "varchar2(10)"
           # sim 4g 3g
-          SIM_TYPE: "varchar2(5)"
+          SIM_TYPE: "varchar2(20)"
           # chi nhánh giao dịch mở thuê bao
           BRANCH: "varchar2(255)"
           # gói cước di động

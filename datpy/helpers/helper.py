@@ -73,16 +73,27 @@ def load_params(dataname,tablename = None, level2 = None, importMonth = None, sc
     return cfg
 
 # @cn.runtime
-def run_main(cfg, run_download=True):
-    not_process_filefir = of.check_file_processed(cfg['ftp_server'].listdir(cfg['ftp_folder']),cfg['logfolder'])
-    for zipf in tqdm(not_process_filefir,desc = 'FTP file:', position = 0):
-        download_file = cn.FtpFile(cfg['CONFIG'].database.db_source, zipf, cfg['savefolder'])
-        download_file.process(run_download = run_download)
-        unpacked_file = download_file.unpack_filelist
-        for file in tqdm(unpacked_file, desc = 'Unpacked file:', position = 1, leave = False):
-            read_file = cfg['run_class'](file,cfg)
-            read_file.process(cfg['oracle_server'])
-        of.write_processedFile(zipf,cfg['logfolder'])
+def run_main(cfg, run_downloadFile=True, source = 'ftp'):
+    
+    if source == 'ftp':
+        not_process_filefir = of.check_file_processed(cfg['ftp_server'].listdir(cfg['ftp_folder']),cfg['logfolder'])
+        for zipf in tqdm(not_process_filefir,desc = 'FTP file:', position = 0):
+            download_file = cn.FtpFile(cfg['CONFIG'].database.db_source, zipf, cfg['savefolder'])
+            download_file.process(run_download = run_downloadFile)
+            unpacked_file = download_file.unpack_filelist
+            for file in tqdm(unpacked_file, desc = 'Unpacked file:', position = 1, leave = False):
+                read_file = cfg['run_class'](file,cfg)
+                read_file.process(cfg['oracle_server'])
+            of.write_processedFile(zipf,cfg['logfolder'])
+
+    elif source == 'oracle':
+        read_file = cfg['run_class'](filedir = None,cfg = cfg)
+        read_file.process(cfg['oracle_server'])
+        cf = cfg['folder_config'].db_source
+        address_source = f"{cf.username}:{cf.password}@{cf.hostname}:{cf.port}/?service_name={cf.service_name}/{cf.tablename}"
+        of.write_processedFile(address_source,cfg['logfolder'])
+
+    os.startfile(cfg['logfolder'])
 
 
 
