@@ -27,13 +27,13 @@ data:
     folder:
       mobifone:
         name: 'mobifone'
-        filecode: "datacode/3_telco/1_info/runfile.py"
+        filecode: "datacode/3_telco/1_info/telco_info.py"
         classname: 'MobifoneInfo'
         local_output: "../../2. DATA/3_telco/1_info/1_mobifone"
         ftp_store: "array1/datatech/1. TELCO/Subcriber Telco Info/TTTB Mobifone/Final"
       viettel:
         name: 'viettel'
-        filecode: "datacode/3_telco/1_info/runfile.py"
+        filecode: "datacode/3_telco/1_info/telco_info.py"
         classname: 'ViettelInfo'
         local_output: "../../2. DATA/3_telco/1_info/2_viettel_2019" 
         # change folder if get news datafile
@@ -48,7 +48,7 @@ data:
           tablename: 'RAW_VIETTEL_DATA_2021'
       vinaphone:
         name: 'vinaphone'
-        filecode: "datacode/3_telco/1_info/runfile.py"
+        filecode: "datacode/3_telco/1_info/telco_info.py"
         classname: 'VinaphoneInfo'
         local_output: "../../2. DATA/3_telco/1_info/3_vinaphone"
         ftp_store: "array1/datatech/1. TELCO/Subcriber Telco Info/TTTB Vinaphone/Final"
@@ -63,34 +63,72 @@ data:
           ADDRESS: "varchar2(800)"
           # tam tru neu PROVINCE khac ADDRESS (vina)
           PROVINCE: "varchar2(50)"
-          NATIONALITY: "varchar2(50)"
-          IDCARD: "varchar2(40)"
+          NATIONALITY: "varchar2(80)"
+          IDCARD: "varchar2(50)"
           IDCARD_ISSUEDATE: "date"
           IDCARD_ADDRESS: "varchar2(800)"
           IDCARD_TYPE: "varchar2(15)"
-          EMAIL: "varchar2(100)"
+          EMAIL: "varchar2(120)"
           CARRIER: "varchar2(30)"
           # thương hiệu điện thoại
-          PHONE_BRAND: "varchar2(50)"
+          PHONE_BRAND: "varchar2(150)"
           # tên loại điện thoại
           PHONE_TYPE: "varchar2(150)"
           # loại thuê bao di động hay máy bàn
           SUB_TYPE: "varchar2(30)"
           # loại trả trước hay trả sau
           PAY_TYPE: "varchar2(10)"
-          # trạng thái thuê bao
-          SUB_STATUS: "varchar2(10)"
           # sim 4g 3g
           SIM_TYPE: "varchar2(20)"
-          # chi nhánh giao dịch mở thuê bao
-          BRANCH: "varchar2(255)"
           # gói cước di động
           PACKAGE_TYPE: "varchar2(40)"
           ACTIVE_DATE: "date"
           UPDATE_DATE: "date"
           IMPORT_MONTH: "varchar2(6)"
           SOURCE: "varchar2(50)"
-
+  telco_bill:
+    name: 'telco_bill'
+    folder:
+      viettel:
+        name: 'Viettel'
+        filecode: "datacode/3_telco/2_bill/telco_bill.py"
+        classname: 'ViettelBill'
+        local_output: "../../2. DATA/3_telco/2_bill/1_viettel" 
+        # change folder if get news datafile
+        ftp_store: "array1/datatech/1. TELCO/Bill Telco"
+      vinaphone:
+        name: 'Vina'
+        filecode: "datacode/3_telco/2_bill/telco_bill.py"
+        classname: 'VinaphoneBill'
+        local_output: "../../2. DATA/3_telco/2_bill/2_vinaphone"
+        ftp_store: "array1/datatech/1. TELCO/Bill Telco"
+    dataSchema:
+      DTT_SD:
+        DTTSD_TELCO_BILL:
+          ISSUE_MONTH: 'varchar2(6)'
+          PHONE_NUMBER: "varchar2(40) NOT NULL"
+          CARRIER: "varchar2(30)"
+          PAY_TYPE: "varchar2(10)"
+          BIRTHYEAR: "varchar2(4)"
+          DOB: "date"
+          GENDER: "varchar2(2)"
+          PROVINCE: "varchar2(50)"
+          DISTRICT: "varchar2(50)"
+          PHONE_TYPE: "varchar2(150)"
+          PACKAGE_TYPE: "varchar2(40)"
+          DATA_PACKAGE_TYPE: "varchar2(40)"
+          ACTIVE_DATE: 'date'
+          LL_CALL_LL: "integer"
+          LL_SMS_LL: "integer"
+          LL_VAS_LL: 'integer'
+          LL_DATA_LL: "integer"
+          BILL_CALL: "float"
+          BILL_SMS: 'float'
+          BILL_VAS: 'float'
+          BILL_DATA: 'float'
+          BILL_TOTAL: 'float'
+          MAIN_BALANCE: 'float'
+          SOURCE: "varchar2(50)"
 
 ...
 ---

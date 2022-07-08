@@ -18,7 +18,7 @@ class TelcoInfo:
     def __init__(self):
         pass
 
-    def get_IMPORT_MONTH(x):
+    def get_BillMonth(x):
         try:
             if re.match("[0-9]{6}", str(x)):
                 return str(x)
@@ -62,7 +62,9 @@ class TelcoInfo:
 
     def process(self,oracle_db=None):
         if self.validate_col:
-            oracle_db.create(self.tablename, self.dataSchema, self.schema)
+            created = oracle_db.create(self.tablename, self.dataSchema, self.schema)
+            # if created:
+            #     oracle_db.createIndex('idx' ,self.tablename, cols = ['PHONE_NUMBER', 'IDCARD'] , schema = self.schema)
             hp.cfg['log'].info(f'Processing {self.filename} to {self.tablename}')
             for df in tqdm(self.datachunk,desc = self.filename, position=2, leave=False):
                 res = self.cleaning_pandas(df)
@@ -71,61 +73,7 @@ class TelcoInfo:
                     oracle_db.upload(res,self.dataSchema ,self.tablename, self.schema ,chunksize = 10000, filename = self.filename)
 
 
-
-class MobifoneInfo(TelcoInfo):
-    name = 'Mobifone'
-    source = "VENDOR_FTP_FILE"
-    def __init__(self,filedir,cfg):
-        self.schema = cfg['schema']
-        self.tablename = cfg['tablename']
-        self.dataSchema = cfg['dataSchema']
-        self.cols = self.dataSchema.keys()
-        self.chunksize = 10000
-        self.filename = os.path.basename(filedir)
-        self.datacols = sorted(pd.read_csv(filedir, on_bad_lines='skip',sep = "|", nrows= 1).columns.tolist())
-        self.datachunk = pd.read_csv(filedir, on_bad_lines='skip',sep = "|", chunksize =self.chunksize)
-        self.rename_dict = {'thuebao':'PHONE_NUMBER',
-                            'socmnd':'IDCARD',
-                            'hoten':'FULLNAME',
-                            'ngaysinh':'DOB',
-                            'diachi':'ADDRESS',
-                            'loaitb':'PAY_TYPE',
-                            'ngaykichhoat':'ACTIVE_DATE',
-                            'ngaythaydoi':'UPDATE_DATE',
-                            'email':'EMAIL'}
-        self.import_month = MobifoneInfo.get_IMPORT_MONTH(cfg['importMonth'])
-        self.validate_inputdata()
-
-    def cleaning_pandas(self,data):
-        try:
-            data = data\
-                .rename(columns=self.rename_dict)\
-                .applymap(lambda x: text(x).clean())\
-                .assign(
-                    PHONE_NUMBER = lambda t: t['PHONE_NUMBER'].map(lambda x: Phone(x,error = 'ignore').cleaned),
-                    IDCARD = lambda t: t['IDCARD'].map(lambda x: IDcard(x).standardize()),
-                    IDCARD_TYPE = lambda t: t['IDCARD'].map(lambda x: IDcard(x).typeIDstandard()),
-                    FULLNAME = lambda t: t['FULLNAME'].map(lambda x: str(x).title(),na_action='ignore'),
-                    ADDRESS = lambda t: t['ADDRESS'].map(lambda x: str(x).title(),na_action='ignore'),
-                    PROVINCE = lambda t: t['ADDRESS'].map(address.get_province,na_action='ignore'),
-                    PAY_TYPE = lambda t: t['PAY_TYPE'].map(MobifoneInfo.get_PAY_TYPE,na_action='ignore'),
-                    DOB = lambda t: pd.to_datetime(t['DOB'], dayfirst=True, errors= 'coerce'),
-                    ACTIVE_DATE = lambda t: pd.to_datetime(t['ACTIVE_DATE'], dayfirst=True, errors= 'coerce'),
-                    UPDATE_DATE = lambda t: pd.to_datetime(t['UPDATE_DATE'], dayfirst=True, errors= 'coerce'),
-                    SUB_TYPE = lambda t: t['PHONE_NUMBER'].map(lambda x: Phone(x,error = 'ignore').typephone),
-                    CARRIER =MobifoneInfo.name,
-                    IMPORT_MONTH = self.import_month,
-                    SOURCE = MobifoneInfo.source)
-            encrypt_df(data,'PHONE_NUMBER','IDCARD')
-            return data.reindex(self.cols, axis = 1)
-        except Exception as e:
-            hp.cfg['log'].error(f"Fail to cleaning data {self.filename} from {data.index[0]} to {data.index[-1]} with error: {e}")
-            return False
-
-
-
-
-class ViettelInfo(TelcoInfo):
+class ViettelBill(TelcoInfo):
     name = 'Viettel'
     def __init__(self,filedir= None,cfg = None):
         self.schema = cfg['schema']
@@ -200,7 +148,7 @@ class ViettelInfo(TelcoInfo):
 
 
 
-class VinaphoneInfo(TelcoInfo):
+class VinaphoneBill(TelcoInfo):
     name = 'Vinaphone'
     def __init__(self,filedir= None,cfg = None):
         self.schema = cfg['schema']

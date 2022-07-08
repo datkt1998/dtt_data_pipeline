@@ -183,6 +183,7 @@ class Database:
                 schemaCol = ", ".join([ "{} {}".format(i,typeCol[i]) for i in typeCol.keys()])  
                 cursor.execute(f"CREATE TABLE {tablename} ({schemaCol})" )
                 hp.cfg['log'].info(f'Created {tablename.upper()} table in {schema.upper()}')
+                return True
             except:
                 hp.cfg['log'].error(f'Fail to created {tablename.upper()} table in {schema.upper()}')
 
@@ -217,7 +218,22 @@ class Database:
         cursor = self.conn.cursor()
         tablename = "{}.{}".format(schema,tablename) if schema is not None else tablename
         cursor.execute(f"""grant {access} on {tablename} to {toUser};""")
+        self.conn.commit()
+        cursor.close()
         print(f'Set {toUser} to {access} in {tablename} !')
+
+    def createIndex(self,indexname ,tablename, cols , schema = None):
+        """
+        CREATE INDEX <indexname> ON <schema.tablename> (cols);
+        """
+        cursor = self.conn.cursor()
+        cols_list = cols if type(cols) != list else ", ".join(cols)
+        tablename = "{}.{}".format(schema,tablename) if schema is not None else tablename
+        cursor.execute(f"""CREATE INDEX {indexname} ON {tablename} ({cols_list});""")
+        self.conn.commit()
+        cursor.close()
+        # conn.close()
+        print(f'Set {indexname} as index to {cols_list} in {tablename} !')
 
     @runtime
     def read(self, table_name: str = None , col_name = "*" ,
