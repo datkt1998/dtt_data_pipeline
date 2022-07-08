@@ -30,7 +30,7 @@ data:
         filecode: "datacode/3_telco/1_info/runfile.py"
         classname: 'MobifoneInfo'
         local_output: "../../2. DATA/3_telco/1_info/1_mobifone"
-        ftp_store: "array1/datatech/1. TELCO/Subcriber Telco Info/TTTB Mobi/Final"
+        ftp_store: "array1/datatech/1. TELCO/Subcriber Telco Info/TTTB Mobifone/Final"
       viettel:
         name: 'viettel'
         filecode: "datacode/3_telco/1_info/runfile.py"
@@ -46,14 +46,22 @@ data:
           username: "score"
           password: "Vmg102021"
           tablename: 'RAW_VIETTEL_DATA_2021'
+      vinaphone:
+        name: 'vinaphone'
+        filecode: "datacode/3_telco/1_info/runfile.py"
+        classname: 'VinaphoneInfo'
+        local_output: "../../2. DATA/3_telco/1_info/3_vinaphone"
+        ftp_store: "array1/datatech/1. TELCO/Subcriber Telco Info/TTTB Vinaphone/Final"
     dataSchema:
       DTT_SD:
         DTTSD_TELCO_INFO:
           PHONE_NUMBER: "varchar2(40) NOT NULL"
           FULLNAME: "varchar2(400)"
           DOB: "date"
-          GERDER: "varchar2(2)"
+          GENDER: "varchar2(2)"
+          # thuong tru
           ADDRESS: "varchar2(800)"
+          # tam tru neu PROVINCE khac ADDRESS (vina)
           PROVINCE: "varchar2(50)"
           NATIONALITY: "varchar2(50)"
           IDCARD: "varchar2(40)"

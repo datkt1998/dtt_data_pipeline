@@ -1,0 +1,12 @@
+importMonth:
+  TTTB moi 01-15T03.2021_Final_20210702.csv : '202103'
+  TTTB moi 16-31T03.2021_Final_20210702.csv : '202103'
+  TTTB moi T01.2021_Final_20210702.csv : '202101'
+  TTTB moi T02.2021_Final_20210702.csv : '202102'
+  TTTB moi T04.2021_Final_20210702.csv : '202104'
+  TTTB moi T05-T11.2020_Final_20210702.csv : '202011'
+  TTTB moi T08.2021_Final_20210917.csv : '202108'
+  TTTB moi T09.2021_Final_20211011.csv: "202109"
+  TTTB moi T10.2021_Final_20211115.csv: "202110"
+  TTTB moi T11.2021_final_20211208.csv: "202111"
+  TTTB moi T05.2022_final_import.csv: "202205"

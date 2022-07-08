@@ -27,10 +27,18 @@ def load_module(path, classname):
 def setup_log():
     pass
 
+def get_IMPORT_MONTH(importMonth):
+    if importMonth.endswith('.yaml'):
+        return cf.Config(os.path.join(os.getcwd(),'configs',importMonth)).read(doc = 0, munch = False)['importMonth']
+    elif importMonth is None:
+        return datetime.now().strftime('%Y%m')
+    else:
+        return importMonth
+
 
 def load_params(dataname,tablename = None, level2 = None, importMonth = None, schema = 'DTTSD'):
     level2 = level2.lower() if level2 is not None else level2
-    importMonth = datetime.now().strftime('%Y%m') if importMonth is None else importMonth
+    importMonth =  get_IMPORT_MONTH(importMonth)
     RUNDIR = os.getcwd()
     CONFIG = cf.Config(os.path.join(RUNDIR,'configs','main_config.yaml')).read(doc = 0)
     folder_config = CONFIG.data[dataname].folder if level2 is None else CONFIG.data[dataname].folder[level2]
@@ -45,7 +53,6 @@ def load_params(dataname,tablename = None, level2 = None, importMonth = None, sc
 
     ftp_server = cn.FtpServer(CONFIG.database.db_source)
     oracle_server = cn.Database(CONFIG.database.db_target)
-    source_oracle_server = cn.Database(folder_config.db_source)
 
     cfg['schema'] = schema
     cfg['level2']=level2

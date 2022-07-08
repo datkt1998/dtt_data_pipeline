@@ -161,7 +161,7 @@ class text:
             return res
 
     def remove_punctuation(str_data):
-        str_data = str_data.strip()
+        str_data = str(str_data).strip()
         for e in ['.0','.00',',0',',00']:
             if str_data.endswith(e):
                 str_data = str_data[:-len(e)]
