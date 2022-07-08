@@ -37,4 +37,4 @@ if __name__ == '__main__':
             schema = 'DTT_SD'
             hp.init()
             hp.load_params(dataname,tablename = tablename, level2 = level2, importMonth = importMonth, schema = schema)
-            hp.run_main(hp.cfg,source = 'ftp',run_downloadFile=False)
+            hp.run_main(hp.cfg,source = 'ftp')
