@@ -73,7 +73,7 @@ data:
           # thương hiệu điện thoại
           PHONE_BRAND: "varchar2(150)"
           # tên loại điện thoại
-          PHONE_TYPE: "varchar2(150)"
+          PHONE_TYPE: "varchar2(250)"
           # loại thuê bao di động hay máy bàn
           SUB_TYPE: "varchar2(30)"
           # loại trả trước hay trả sau

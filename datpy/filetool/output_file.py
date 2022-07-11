@@ -89,7 +89,7 @@ def OutputFolder(mainFolder = os.getcwd()):
     Path(logfolder).mkdir(parents=True, exist_ok=True)
     return save,logfolder
 
-def check_file_processed(listdir,logFolder):
+def check_file_processed(listdir,logFolder, mode = None):
     processed_file = os.path.join(logFolder,'processed_filedir.csv')
     if os.path.exists(processed_file):
         processed_list = pd.read_csv(processed_file,sep="|")['filedir'].tolist()
@@ -97,7 +97,7 @@ def check_file_processed(listdir,logFolder):
     else:
         processed_list=[]
         hp.cfg['log'].warning("not found processed_filedir.csv")
-    not_processed_list = [i for i in listdir if i not in processed_list]
+    not_processed_list = [i for i in listdir if i not in ([] if mode == 'fix_log' else processed_list)]
     not_processed_file = os.path.join(logFolder,'not_processed_filedir.csv')
     pd.DataFrame({'not_process_file':not_processed_list}).to_csv(not_processed_file,sep="|",index=False)
     hp.cfg['log'].info("exported not_processed_filedir.csv")

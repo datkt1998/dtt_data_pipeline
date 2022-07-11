@@ -55,6 +55,20 @@ class TelcoInfo:
             # raise
             hp.cfg['log'].critical(f"File '{self.filename}' has the failure in data columns!!!")
 
+    def check_rangeIndex(self,df):
+        if self.rangeIndex is None:
+            return True
+        if self.rangeIndex is not None:
+            range_index = self.rangeIndex[0]
+            if df.index[0] == range_index[0]:
+                if self.chunksize != (range_index[1] - range_index[0] +1):
+                    raise f"Chunksize is {self.chunksize}, but rangeIndex is from {range_index[0]} to {range_index[1]}"
+                else:
+                    self.rangeIndex.pop(0)
+                    return True
+            else:
+                return False
+
     def cleaning_pandas(self):
         pass
 
@@ -64,18 +78,24 @@ class TelcoInfo:
             # if created:
             #     oracle_db.createIndex('idx' ,self.tablename, cols = ['PHONE_NUMBER', 'IDCARD'] , schema = self.schema)
             hp.cfg['log'].info(f'Processing {self.filename} to {self.tablename}')
-            for df in tqdm(self.datachunk,desc = self.filename, position=2, leave=False):
-                res = self.cleaning_pandas(df)
-                # raise
-                if type(res) != bool:
-                    oracle_db.upload(res,self.dataSchema ,self.tablename, self.schema ,chunksize = 10000, filename = self.filename)
+            with self.datachunk as f_chunk:
+                for df in tqdm(f_chunk,desc = self.filename, position=2, leave=False):
+                    if self.rangeIndex == []:
+                        break
+                    if self.check_rangeIndex(df):
+                        res = self.cleaning_pandas(df)
+                        if type(res) != bool:
+                            oracle_db.upload(res,self.dataSchema ,self.tablename, self.schema ,chunksize = 10000, filename = self.filename)
+                            # raise
+
 
 
 
 class MobifoneInfo(TelcoInfo):
     name = 'Mobifone'
     source = "VENDOR_FTP_FILE"
-    def __init__(self,filedir,cfg):
+    def __init__(self,filedir,cfg,rangeIndex=None):
+        self.rangeIndex = rangeIndex
         self.schema = cfg['schema']
         self.tablename = cfg['tablename']
         self.dataSchema = cfg['dataSchema']
@@ -127,7 +147,8 @@ class MobifoneInfo(TelcoInfo):
 
 class ViettelInfo(TelcoInfo):
     name = 'Viettel'
-    def __init__(self,filedir= None,cfg = None):
+    def __init__(self,filedir= None,cfg = None,rangeIndex=None):
+        self.rangeIndex = rangeIndex
         self.schema = cfg['schema']
         self.tablename = cfg['tablename']
         self.dataSchema = cfg['dataSchema']
@@ -189,7 +210,7 @@ class ViettelInfo(TelcoInfo):
                     SUB_TYPE = lambda t: t['PHONE_NUMBER'].map(lambda x: Phone(x,error = 'ignore').typephone),
                     CARRIER =ViettelInfo.name,
                     IMPORT_MONTH = ((lambda t: t['IMPORT_MONTH'].map(ViettelInfo.get_IMPORT_MONTH)) if self.import_month is None else self.import_month),
-                    SOURCE = lambda t: t['SOURCE'].map(lambda x: "VENDOR_FTP_FILE" if x == "VT" else "EKYC")
+                    SOURCE = lambda t: t['SOURCE'].map(lambda x: "VENDOR_FTP_FILE" if x == "VT" else ("EKYC" if x == "EKYC" else x))
                     )
             encrypt_df(data,'PHONE_NUMBER','IDCARD')
             return data.reindex(self.cols, axis = 1)
@@ -202,7 +223,8 @@ class ViettelInfo(TelcoInfo):
 
 class VinaphoneInfo(TelcoInfo):
     name = 'Vinaphone'
-    def __init__(self,filedir= None,cfg = None):
+    def __init__(self,filedir= None,cfg = None,rangeIndex=None):
+        self.rangeIndex = rangeIndex
         self.schema = cfg['schema']
         self.tablename = cfg['tablename']
         self.dataSchema = cfg['dataSchema']

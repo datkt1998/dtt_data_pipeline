@@ -104,7 +104,7 @@ class address:
 
     def get_province(address_data:str):
 
-        if address_data != address_data:
+        if (address_data != address_data) or (address_data is None):
             return np.nan
 
         def rfind_nth(string, substring=" ", n=1, max_num_char = 3):
@@ -116,15 +116,14 @@ class address:
 
         add_replacepunc = address_data.translate(str.maketrans(punctuation, ' '*len(punctuation))) #map punctuation to space
         add_clean = unidecode(add_replacepunc).replace("  "," ").strip().lower()
-        count_word_use = 0
-        while count_word_use < 10:
-            count_word_use+=1
+        for count_word_use in range(7):
             check = rfind_nth(add_clean,n = count_word_use)
-            for minscore in [1, 0.99, 0.95, 0.9, 0.85, 0.8]:
+            for minscore in [1, 0.99, 0.95, 0.9, 0.85]:
                 res = get_close_matches(check,address.listkey, n = 1, cutoff=minscore)
                 if len(res)>0:
                     return address.unidecode_province[res[0]]  
-        return address.splitAdress(data = address_data, key_return = ["province_short"])[0]
+        # return address.splitAdress(data = address_data, key_return = ["province_short"])[0]
+        return np.nan
 
 
     # Phan tich Address

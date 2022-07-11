@@ -6,6 +6,7 @@ from datetime import datetime
 import datpy.database.connection as cn
 import datpy.filetool.config_file as cf
 import datpy.filetool.output_file as of
+from datpy.helpers.fixlog import fixlog
 from datpy.filetool.output_file import Mylog
 from tqdm import tqdm
 import time
@@ -28,10 +29,13 @@ def setup_log():
     pass
 
 def get_IMPORT_MONTH(importMonth):
-    if importMonth.endswith('.yaml'):
+    if importMonth is None:
+        return None
+
+    # if importMonth is None:
+    #     return datetime.now().strftime('%Y%m')
+    elif importMonth.endswith('.yaml'):
         return cf.Config(os.path.join(os.getcwd(),'configs',importMonth)).read(doc = 0, munch = False)['importMonth']
-    elif importMonth is None:
-        return datetime.now().strftime('%Y%m')
     else:
         return importMonth
 
@@ -80,18 +84,28 @@ def load_params(dataname,tablename = None, level2 = None, importMonth = None, sc
     return cfg
 
 # @cn.runtime
-def run_main(cfg, run_downloadFile=True, source = 'ftp'):
+def run_main(cfg, run_downloadFile=True, source = 'ftp', mode = 'run_new', fixlog_filename = None):
+    fixlog_dir = os.path.join(cfg['logfolder'],fixlog_filename) if fixlog_filename is not None else None
+    fixlog_object = fixlog(fixlog_dir).fixlog_object() if fixlog_dir is not None else None
     
     if source == 'ftp':
         not_process_filefir = of.check_file_processed(cfg['ftp_server'].listdir(cfg['ftp_folder']),cfg['logfolder'])
+        if fixlog_object is not None:
+            not_process_filefir = [i for i in not_process_filefir if os.path.basename(i) in fixlog_object.keys()]
         for zipf in tqdm(not_process_filefir,desc = 'FTP file:', position = 0):
             download_file = cn.FtpFile(cfg['CONFIG'].database.db_source, zipf, cfg['savefolder'])
             download_file.process(run_download = run_downloadFile)
             unpacked_file = download_file.unpack_filelist
             for file in tqdm(unpacked_file, desc = 'Unpacked file:', position = 1, leave = False):
-                read_file = cfg['run_class'](file,cfg)
-                read_file.process(cfg['oracle_server'])
-            of.write_processedFile(zipf,cfg['logfolder'])
+                if mode == 'run_new':
+                    read_file = cfg['run_class'](file,cfg)
+                    read_file.process(cfg['oracle_server'])
+                    of.write_processedFile(zipf,cfg['logfolder'])
+                elif (mode == 'fix_log') and (fixlog_object is not None) and (os.path.basename(file) in fixlog_object.keys()):
+                    fixlog_ranges = fixlog_object[os.path.basename(file)]
+                    read_file = cfg['run_class'](file,cfg, rangeIndex = fixlog_ranges)
+                    read_file.process(cfg['oracle_server'])
+            
 
     elif source == 'oracle':
         read_file = cfg['run_class'](filedir = None,cfg = cfg)
