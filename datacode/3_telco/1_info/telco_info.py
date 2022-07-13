@@ -9,7 +9,7 @@ import numpy as np
 # from sqlalchemy import types
 # from datpy.database.connection import Database
 # from sqlalchemy.sql.sqltypes import VARCHAR
-from datpy.filetool.output_file import logs
+# from datpy.filetool.output_file import logs
 # import csv
 
 

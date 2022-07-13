@@ -11,6 +11,7 @@ import sqlite3
 from tqdm import tqdm as tqdm_
 from datpy.helpers import helper as hp
 from datpy.filetool.output_file import logs
+from munch import DefaultMunch
 
 def runtime(func):
     def func_wrapper(*args, **kwargs):
@@ -20,6 +21,20 @@ def runtime(func):
         print("--> Finish in {}s".format(str(stop - start).split(".")[0])) 
         return res
     return func_wrapper
+
+def showlog(show = 'log', level = 'Error'):
+    level = level.lower()
+    if show == 'log':
+        if level == 'error':
+            return hp.cfg['log'].error
+        elif level == 'warning':
+            return hp.cfg['log'].warning
+        elif level == 'info':
+            return hp.cfg['log'].info
+        elif level == 'critical':
+            return hp.cfg['log'].critical
+    elif show == 'print':
+        return print
 
 
 class FtpServer:
@@ -131,8 +146,9 @@ class FtpFile(FtpServer):
 
 class Database:
 
-    def __init__(self, configs_database):
-        self.configs_database = configs_database
+    def __init__(self, configs_database, show = 'log'):
+        self.configs_database = DefaultMunch.fromDict(configs_database)
+        self.show = show
         self.connect()
 
     def connect(self):
@@ -141,14 +157,14 @@ class Database:
             if cf.type == 'oracle': # oracle
                 self.conn = cx_Oracle.connect(user=cf.username,password=cf.password,dsn=f"{cf.hostname}:{cf.port}/{cf.service_name}")
                 self.engine = create_engine(f'oracle+cx_oracle://{cf.username}:{cf.password}@{cf.hostname}:{cf.port}/?service_name={cf.service_name}')
-                hp.cfg['log'].info(f"Success connecting to database {cf.hostname}:{cf.port}/{cf.service_name}")
+                showlog(show = self.show, level = 'info')(f"Success connecting to database {cf.hostname}:{cf.port}/{cf.service_name}")
             elif cf.type == 'sqlite3':
                 self.conn = sqlite3.connect(cf.path)
                 self.engine = sqlite3.connect(cf.path)
-                hp.cfg['log'].info(f"Success connecting to database {cf.path}")
+                showlog(show = self.show, level = 'info')(f"Success connecting to database {cf.path}")
             
         except Exception as e:
-            hp.cfg['log'].error('Fail to connect to database !')
+            showlog(show = self.show, level = 'error')('Fail to connect to database !')
             raise e
 
     # @runtime
@@ -156,9 +172,9 @@ class Database:
         # Drop table if exists
         cursor = self.conn.cursor() 
         tablename = "{}.{}".format(schema,tablename) if schema is not None else tablename
-        hp.cfg['log'].warning(f'Droping {tablename.upper()} table if exists.')
+        showlog(show = self.show, level = 'warning')(f'Droping {tablename.upper()} table if exists.')
         cursor.execute(f"BEGIN EXECUTE IMMEDIATE 'DROP TABLE {tablename.upper()}'; EXCEPTION WHEN OTHERS THEN NULL; END;")
-        hp.cfg['log'].warning(f'Droped {tablename.upper()} table if exists.')
+        showlog(show = self.show, level = 'warning')(f'Droped {tablename.upper()} table if exists.')
 
     def create(self, tablename:str, typeCol:dict, schema = None):
 
@@ -170,7 +186,7 @@ class Database:
             """
             cnt = pd.read_sql_query(sql,conn).iloc[0,0]
             if cnt == 0:
-                hp.cfg['log'].warning(f'There are no {tablename.upper()} table')
+                showlog(show = self.show, level = 'warning')(f'There are no {tablename.upper()} table')
                 return False
             else:
                 # hp.cfg['log'].info(f'There are no {tablename.upper()} table')
@@ -182,10 +198,10 @@ class Database:
                 cursor = self.conn.cursor() 
                 schemaCol = ", ".join([ "{} {}".format(i,typeCol[i]) for i in typeCol.keys()])  
                 cursor.execute(f"CREATE TABLE {tablename} ({schemaCol})" )
-                hp.cfg['log'].info(f'Created {tablename.upper()} table in {schema.upper()}')
+                showlog(show = self.show, level = 'info')(f'Created {tablename.upper()} table in {schema.upper()}')
                 return True
             except:
-                hp.cfg['log'].error(f'Fail to created {tablename.upper()} table in {schema.upper()}')
+                showlog(show = self.show, level = 'error')(f'Fail to created {tablename.upper()} table in {schema.upper()}')
 
     def getdtype(dataSchema):
         def convert_tool(x:str):
@@ -208,7 +224,7 @@ class Database:
                         chunksize = chunksize, index=False, dtype = dty)
             # hp.cfg['log'].info(f"Uploaded ('{if_exists}') data to {tablename.upper()} table in {schema.upper()} from {data.index[0]} to {data.index[-1]}")
         except Exception as e:
-            hp.cfg['log'].error(f"Fail to upload data {filename} from {data.index[0]} to {data.index[-1]} with error: {e}")
+            showlog(show = self.show, level = 'error')(f"Fail to upload data {filename} from {data.index[0]} to {data.index[-1]} with error: {e}")
 
 
     def access(self,toUser ,tablename, access = 'select', schema = None):

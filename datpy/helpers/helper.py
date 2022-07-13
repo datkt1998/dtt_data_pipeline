@@ -9,7 +9,7 @@ import datpy.filetool.output_file as of
 from datpy.helpers.fixlog import fixlog
 from datpy.filetool.output_file import Mylog
 from tqdm import tqdm
-import time
+# import time
 
 def init():
     global cfg

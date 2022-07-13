@@ -133,7 +133,7 @@ class address:
         score = np.cumprod(A_split == B_split).sum()
         return score
 
-    
+
 class text:
 
     def __init__(self,value):
