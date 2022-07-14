@@ -42,8 +42,16 @@ def decrypt(data, max_data=50000,use_tqdm = False):
 
 def encrypt_df(df, *cols):
     for col in cols :
-        df[col] = encrypt(df[col].tolist())
+        if type(col)==str :
+            df[col] = encrypt(df[col].tolist())
+        elif type(col) == list:
+            for subcol in col:
+                df[subcol] = encrypt(df[subcol].tolist())
 
 def decrypt_df(df, *cols):
     for col in cols :
-        df[col] = decrypt(df[col].tolist())
+        if type(col)==str :
+            df[col] = decrypt(df[col].tolist())
+        elif type(col) == list:
+            for subcol in col:
+                df[subcol] = decrypt(df[subcol].tolist())
