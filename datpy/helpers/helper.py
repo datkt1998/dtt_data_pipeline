@@ -2,7 +2,7 @@
 import os
 import importlib
 import sys
-from datetime import datetime
+# from datetime import datetime
 import datpy.database.connection as cn
 import datpy.filetool.config_file as cf
 import datpy.filetool.output_file as of
@@ -58,6 +58,7 @@ def load_params(dataname,tablename = None, level2 = None, importMonth = None, sc
     ftp_server = cn.FtpServer(CONFIG.database.db_source)
     oracle_server = cn.Database(CONFIG.database.db_target)
 
+    cfg['name_level2'] = folder_config.name
     cfg['schema'] = schema
     cfg['level2']=level2
     cfg['tablename']=tablename
@@ -83,6 +84,8 @@ def load_params(dataname,tablename = None, level2 = None, importMonth = None, sc
     cfg['log'].info('Success to load parameter !')
     return cfg
 
+
+
 # @cn.runtime
 def run_main(cfg, run_downloadFile=True, source = 'ftp', mode = 'run_new', fixlog_filename = None):
     fixlog_dir = os.path.join(cfg['logfolder'],fixlog_filename) if fixlog_filename is not None else None
@@ -93,6 +96,7 @@ def run_main(cfg, run_downloadFile=True, source = 'ftp', mode = 'run_new', fixlo
         if fixlog_object is not None:
             not_process_filefir = [i for i in not_process_filefir if os.path.basename(i) in fixlog_object.keys()]
         for zipf in tqdm(not_process_filefir,desc = 'FTP file:', position = 0):
+            cfg['ftp_filedir'] = zipf
             download_file = cn.FtpFile(cfg['CONFIG'].database.db_source, zipf, cfg['savefolder'])
             download_file.process(run_download = run_downloadFile)
             unpacked_file = download_file.unpack_filelist

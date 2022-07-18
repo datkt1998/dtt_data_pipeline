@@ -1,100 +1,15 @@
-from datpy.vmg.cleaning import text, address, Phone, IDcard, unidecode
+from datpy.vmg.cleaning import text, address, Phone, IDcard, unidecode,Person
 from datpy.vmg.codecrypt import encrypt_df, decrypt_df
-import pandas as pd
-import re
-from tqdm import tqdm
-import os
 from datpy.helpers import helper as hp
-import numpy as np
-# from sqlalchemy import types
-# from datpy.database.connection import Database
-# from sqlalchemy.sql.sqltypes import VARCHAR
-# from datpy.filetool.output_file import logs
-# import csv
+from datpy.helpers.clean_job import CleanProcess
+import pandas as pd
+import os
 
-
-class TelcoInfo:
-
-    def __init__(self):
-        pass
-
-    def get_IMPORT_MONTH(x):
-        try:
-            if re.match("[0-9]{6}", str(x)):
-                return str(x)
-            else:
-                return pd.to_datetime(str(x)).strftime('%Y%m')
-        except:
-            return np.datetime64('NaT')
-
-    def get_PAY_TYPE(x):
-        x = unidecode(text(x).clean()).lower()
-        if len([i for i in ['pre','truoc','tt'] if i in x])>0:
-            return 'prepaid'
-        elif len([i for i in ['post','sau','ts'] if i in x])>0:
-            return 'postpaid'
-        else :
-            return np.nan
-
-    def convert_gender(x):
-        if x != x:
-            return np.nan
-        x = unidecode(text(x).clean()).lower()
-        if x in ['m', 'male','nam']:
-            return 'M'
-        elif x in ['f', 'female','nu']:
-            return 'F'
-        else:
-            return np.nan
-
-    def validate_inputdata(self):
-        a = sorted([i.upper() for i in self.datacols])
-        b = sorted([i.upper() for i in self.rename_dict.keys()])
-        self.validate_col = ([e for e in b if e in a] == b)
-        if self.validate_col == False:
-            # raise
-            hp.cfg['log'].critical(f"File '{self.filename}' has the failure in data columns!!!")
-
-    def check_rangeIndex(self,df):
-        if self.rangeIndex is None:
-            return True
-        if self.rangeIndex is not None:
-            range_index = self.rangeIndex[0]
-            if df.index[0] == range_index[0]:
-                if self.chunksize != (range_index[1] - range_index[0] +1):
-                    raise f"Chunksize is {self.chunksize}, but rangeIndex is from {range_index[0]} to {range_index[1]}"
-                else:
-                    self.rangeIndex.pop(0)
-                    return True
-            else:
-                return False
-
-    def cleaning_pandas(self):
-        pass
-
-    def process(self,oracle_db=None):
-        if self.validate_col:
-            created = oracle_db.create(self.tablename, self.dataSchema, self.schema)
-            # if created:
-            #     oracle_db.createIndex('idx' ,self.tablename, cols = ['PHONE_NUMBER', 'IDCARD'] , schema = self.schema)
-            hp.cfg['log'].info(f'Processing {self.filename} to {self.tablename}')
-            with self.datachunk as f_chunk:
-                for df in tqdm(f_chunk,desc = self.filename, position=2, leave=False):
-                    if self.rangeIndex == []:
-                        break
-                    if self.check_rangeIndex(df):
-                        res = self.cleaning_pandas(df)
-                        if type(res) != bool:
-                            oracle_db.upload(res,self.dataSchema ,self.tablename, self.schema ,chunksize = 10000, filename = self.filename)
-                            # raise
-
-
-
-
-class MobifoneInfo(TelcoInfo):
-    name = 'Mobifone'
+class MobifoneInfo(CleanProcess):
+    
     source = "VENDOR_FTP_FILE"
     def __init__(self,filedir,cfg,rangeIndex=None):
+        self.name = cfg['name_level2']
         self.rangeIndex = rangeIndex
         self.schema = cfg['schema']
         self.tablename = cfg['tablename']
@@ -128,12 +43,12 @@ class MobifoneInfo(TelcoInfo):
                     FULLNAME = lambda t: t['FULLNAME'].map(lambda x: str(x).title(),na_action='ignore'),
                     ADDRESS = lambda t: t['ADDRESS'].map(lambda x: str(x).title(),na_action='ignore'),
                     PROVINCE = lambda t: t['ADDRESS'].map(address.get_province,na_action='ignore'),
-                    PAY_TYPE = lambda t: t['PAY_TYPE'].map(MobifoneInfo.get_PAY_TYPE,na_action='ignore'),
+                    PAY_TYPE = lambda t: t['PAY_TYPE'].map(Phone.pay_type,na_action='ignore'),
                     DOB = lambda t: pd.to_datetime(t['DOB'], dayfirst=True, errors= 'coerce'),
                     ACTIVE_DATE = lambda t: pd.to_datetime(t['ACTIVE_DATE'], dayfirst=True, errors= 'coerce'),
                     UPDATE_DATE = lambda t: pd.to_datetime(t['UPDATE_DATE'], dayfirst=True, errors= 'coerce'),
                     SUB_TYPE = lambda t: t['PHONE_NUMBER'].map(lambda x: Phone(x,error = 'ignore').typephone),
-                    CARRIER =MobifoneInfo.name,
+                    CARRIER =self.name,
                     IMPORT_MONTH = self.import_month,
                     SOURCE = MobifoneInfo.source)
             encrypt_df(data,'PHONE_NUMBER','IDCARD')
@@ -145,7 +60,7 @@ class MobifoneInfo(TelcoInfo):
 
 
 
-class ViettelInfo(TelcoInfo):
+class ViettelInfo(CleanProcess):
     name = 'Viettel'
     def __init__(self,filedir= None,cfg = None,rangeIndex=None):
         self.rangeIndex = rangeIndex
@@ -202,7 +117,7 @@ class ViettelInfo(TelcoInfo):
                     IDCARD_ISSUEDATE = lambda t: pd.to_datetime(t['IDCARD_ISSUEDATE'], format="%Y%m%d", errors= 'coerce'),
                     ADDRESS = lambda t: t['ADDRESS'].map(lambda x: str(x).title(),na_action='ignore'),
                     PROVINCE = lambda t: t['ADDRESS'].map(address.get_province,na_action='ignore'),
-                    PAY_TYPE = lambda t: t['PAY_TYPE'].map(ViettelInfo.get_PAY_TYPE,na_action='ignore'),
+                    PAY_TYPE = lambda t: t['PAY_TYPE'].map(Phone.pay_type,na_action='ignore'),
                     SIM_TYPE = lambda t: t['SIM_TYPE'].map(lambda x: text.remove_punctuation(unidecode(str(x).lower())),na_action='ignore'),
                     PACKAGE_TYPE = lambda t: t['PACKAGE_TYPE'].map(lambda x: text.remove_punctuation(unidecode(str(x).upper())),na_action='ignore'),
                     ACTIVE_DATE = lambda t: pd.to_datetime(t['DOB'], format="%Y%m%d", errors= 'coerce'),
@@ -221,7 +136,7 @@ class ViettelInfo(TelcoInfo):
 
 
 
-class VinaphoneInfo(TelcoInfo):
+class VinaphoneInfo(CleanProcess):
     name = 'Vinaphone'
     def __init__(self,filedir= None,cfg = None,rangeIndex=None):
         self.rangeIndex = rangeIndex
@@ -277,11 +192,11 @@ class VinaphoneInfo(TelcoInfo):
                     ADDRESS = lambda t: t['ADDRESS'].map(lambda x: str(x).title(),na_action='ignore'),
                     PHONE_BRAND = lambda t: t['PHONE_BRAND'].fillna(t['NHA_SAN_XUAT']).map(lambda x: str(x).title(),na_action='ignore'),
                     IDCARD = lambda t: t['IDCARD'].map(lambda x: IDcard(x).standardize()),
-                    GENDER = lambda t: t['GENDER'].map(TelcoInfo.convert_gender),
+                    GENDER = lambda t: t['GENDER'].map(Person.gender_standardize),
                     IDCARD_TYPE = lambda t: t['IDCARD'].map(lambda x: IDcard(x).typeIDstandard()),
                     IDCARD_ISSUEDATE = lambda t: pd.to_datetime(t['IDCARD_ISSUEDATE'].map(text.remove_punctuation), format="%Y%m%d", errors= 'coerce'),
                     PROVINCE = lambda t: t['PROVINCE'].fillna(t['ADDRESS']).map(address.get_province,na_action='ignore'),
-                    PAY_TYPE = lambda t: t['PAY_TYPE'].map(ViettelInfo.get_PAY_TYPE,na_action='ignore'),
+                    PAY_TYPE = lambda t: t['PAY_TYPE'].map(Phone.pay_type,na_action='ignore'),
                     PACKAGE_TYPE = lambda t: t['PACKAGE_TYPE'].map(lambda x: str(x).upper(),na_action='ignore'),
                     ACTIVE_DATE = lambda t: pd.to_datetime(t['ACTIVE_DATE'].map(text.remove_punctuation), format="%Y%m%d", errors= 'coerce'),
                     UPDATE_DATE = lambda t: pd.to_datetime(t['UPDATE_DATE'], format="%Y%m", errors= 'coerce'),

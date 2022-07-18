@@ -26,13 +26,13 @@ data:
     name: 'telco_info'
     folder:
       mobifone:
-        name: 'mobifone'
+        name: 'Mobifone'
         filecode: "datacode/3_telco/1_info/telco_info.py"
         classname: 'MobifoneInfo'
         local_output: "../../2. DATA/3_telco/1_info/1_mobifone"
         ftp_store: "array1/datatech/1. TELCO/Subcriber Telco Info/TTTB Mobifone/Final"
       viettel:
-        name: 'viettel'
+        name: 'Viettel'
         filecode: "datacode/3_telco/1_info/telco_info.py"
         classname: 'ViettelInfo'
         local_output: "../../2. DATA/3_telco/1_info/2_viettel_2019" 
@@ -47,7 +47,7 @@ data:
           password: "Vmg102021"
           tablename: 'RAW_VIETTEL_DATA_2021'
       vinaphone:
-        name: 'vinaphone'
+        name: 'Vinaphone'
         filecode: "datacode/3_telco/1_info/telco_info.py"
         classname: 'VinaphoneInfo'
         local_output: "../../2. DATA/3_telco/1_info/3_vinaphone"
@@ -92,12 +92,35 @@ data:
       viettel:
         name: 'Viettel'
         filecode: "datacode/3_telco/2_bill/telco_bill.py"
-        classname: 'ViettelBill'
+        classname: 'ViettelBill_ftp'
         local_output: "../../2. DATA/3_telco/2_bill/1_viettel" 
         # change folder if get news datafile
-        ftp_store: "array1/datatech/1. TELCO/Bill Telco"
+        ftp_store: "array1/datatech/1. TELCO/Bill Telco/2022/Viettel"
+        db_source:
+          type: "oracle"
+          hostname: "192.168.18.32"
+          port: "1521"
+          service_name: "score"
+          username: "score"
+          password: "Vmg102021"
+          tablename:
+            '201808':
+              -'MAPPING_BILL_POSTPAID_201808'
+              -'MAPPING_BILL_PREPAID_201808'
+            '201909':
+              -'MAPPING_BILL_POSTPAID_201809'
+              -'MAPPING_BILL_PREPAID_201809'
+            '201810':
+              -'MAPPING_BILL_POSTPAID_2018010'
+              -'MAPPING_BILL_PREPAID_2018010'
+            '201811':
+              -'MAPPING_BILL_POSTPAID_2018011'
+              -'MAPPING_BILL_PREPAID_2018011'
+            '201812':
+              -'MAPPING_BILL_POSTPAID_2018011'
+              -'MAPPING_BILL_PREPAID_2018011'
       vinaphone:
-        name: 'Vina'
+        name: 'Vinaphone'
         filecode: "datacode/3_telco/2_bill/telco_bill.py"
         classname: 'VinaphoneBill'
         local_output: "../../2. DATA/3_telco/2_bill/2_vinaphone"
@@ -112,16 +135,18 @@ data:
           BIRTHYEAR: "varchar2(4)"
           DOB: "date"
           GENDER: "varchar2(2)"
-          PROVINCE: "varchar2(50)"
-          DISTRICT: "varchar2(50)"
-          PHONE_TYPE: "varchar2(150)"
+          ADDRESS: "varchar2(800)"
+          PROVINCE: "varchar2(100)"
+          DISTRICT: "varchar2(100)"
+          PHONE_BRAND: "varchar2(150)"
+          PHONE_TYPE: "varchar2(250)"
           PACKAGE_TYPE: "varchar2(40)"
           DATA_PACKAGE_TYPE: "varchar2(40)"
           ACTIVE_DATE: 'date'
-          LL_CALL_LL: "integer"
-          LL_SMS_LL: "integer"
-          LL_VAS_LL: 'integer'
-          LL_DATA_LL: "integer"
+          LL_CALL: "integer"
+          LL_SMS: "integer"
+          LL_VAS: 'integer'
+          LL_DATA: "integer"
           BILL_CALL: "float"
           BILL_SMS: 'float'
           BILL_VAS: 'float'

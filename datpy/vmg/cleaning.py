@@ -8,6 +8,9 @@ import re
 import tqdm
 from difflib import get_close_matches
 import pandas as pd
+import os
+from datpy.web.web_action import download_mapping_telco
+
 
 class address:
 
@@ -160,12 +163,12 @@ class text:
             return res
 
     def remove_punctuation(str_data):
-        str_data = str(str_data).strip()
+        str_data = str(str_data).replace("  "," ").strip()
         for e in ['.0','.00',',0',',00']:
             if str_data.endswith(e):
                 str_data = str_data[:-len(e)]
                 break
-        str_data = str_data.translate(str.maketrans('', '', punctuation))
+        str_data = str_data.translate(str.maketrans('', '', punctuation)).strip()
         return str_data
 
     def clean(self):
@@ -534,10 +537,11 @@ class Phone(text):
         self.dausodidong = [i[1] for i in self.chuyendausodidong] + \
                             ['86','96','97','98','88','91','94','89','90','93','92','56','58','99','87']
         self.dausocodinh = [i[1] for i in self.chuyendausocodinh]
-        self.typephone = 'unknown'
+        # self.typephone = 'unknown'
         self.cleaned = self.standardize()
 
     def cleankey(self):
+        self.typephone = 'unknown'
         dialcode = self.dialcode
         def isAllNumber(text):
             for char in text:
@@ -551,6 +555,7 @@ class Phone(text):
 
         while (len(cleaned) >= 9) and (runtime<30) and (self.typephone == 'unknown'):
 
+            cleaned = cleaned[5:] if (cleaned[:5] == '84004') and (len(cleaned)>=14) else cleaned
             cleaned = cleaned[1:] if cleaned[0] == '0' else cleaned
             if ((cleaned[:len(dialcode)] == dialcode) and len(cleaned)>=(9+len(dialcode))):
                 cleaned = cleaned[len(dialcode):]
@@ -566,6 +571,7 @@ class Phone(text):
                     if cleaned.startswith(i) and (len(cleaned[len(i):]) in [7,8]): # ví du 0220 3736 596 (HD), 024 392 63087 (HN)
                         self.typephone = 'so_co_dinh'
                         break
+                    
 
             if (len(cleaned) == 10) and (self.typephone == 'unknown'):
                 for pair in self.chuyendausodidong:
@@ -600,8 +606,69 @@ class Phone(text):
             res = text(res).encrypt()
         return res
 
+    def pay_type(paytype):
+        paytype = unidecode(text(paytype).clean()).lower()
+        if len([i for i in ['pre','truoc','tt'] if i in paytype])>0:
+            return 'prepaid'
+        elif len([i for i in ['post','sau','ts'] if i in paytype])>0:
+            return 'postpaid'
+        else :
+            return np.nan
+
+    def map_telco(list_of_phonenumbers):
+        def merge_mapping_telco( filedir ):
+            mapped = pd.DataFrame()
+            with pd.ExcelFile(filedir) as excelFile:
+                for telco in excelFile.sheet_names:
+                    if telco.lower() not in ['sai số','trùng số']:
+                        sheetfile = excelFile.parse(telco)
+                        sheetfile['TELCO'] = telco
+                        mapped = pd.concat([mapped,sheetfile],ignore_index=True)
+            return mapped
+
+        download_location = os.getcwd()
+        data = pd.DataFrame(list_of_phonenumbers, columns = ['RAW']).drop_duplicates()
+        data['MSISDN'] = data['RAW'].map(lambda x: Phone(x).standardize())
+        data[['MSISDN']].drop_duplicates().to_excel(os.path.join(download_location,'map_telco.xlsx'),index=False)
+        download_mapping_telco( download_location = download_location )
+        downloadedfile = os.path.join(download_location,
+        [i for i in os.listdir(download_location) if i.startswith('DataTelco_')][0])
+        mapped = merge_mapping_telco(downloadedfile)
+        mapped['MSISDN'] = mapped['MSISDN'].map(lambda x: Phone(x).standardize())
+        data_res = data.merge(mapped,how='left')
+        os.remove(os.path.join(download_location,'map_telco.xlsx'))
+        os.remove(downloadedfile)
+        return data_res
+
+class Person:
+    def __init__(self):
+        pass
+
+    def gender_standardize(gender):
+        if gender != gender:
+            return np.nan
+        gender = unidecode(text(gender).clean()).lower()
+        if gender in ['m', 'male','nam']:
+            return 'M'
+        elif gender in ['f', 'female','nu']:
+            return 'F'
+        else:
+            return np.nan
+    
+    def birthyear_standardize(birthyear):
+        res = np.nan
+        try:
+            str_birthyear = text.remove_punctuation(text(str(birthyear)).clean())
+            if re.match("^[0-9]{4,4}$",str_birthyear):
+                if (int(str_birthyear) > 1930) and (int(str_birthyear) < 2030):
+                    return str_birthyear
+            return res
+        except:
+            return res
+
+
 #%%
-# Phone('01234208162').standardize()
+# Phone("8484919891000").standardize()
 #%%
 
 class SI(text):

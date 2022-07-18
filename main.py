@@ -15,9 +15,9 @@ if __name__ == '__main__':
     # cfg = args.cfg
     # mode = args.mode
     # fixlog_filename = args.logname
-    cfg = 'telco_info_vinaphone'
+    cfg = 'telco_bill_viettel_ftp'
     mode = 'run_new'
-    fixlog_filename = 'logs_2022_07_11_11_56.log'
+    fixlog_filename = None #'logs_2022_07_11_11_56.log'
 
     if cfg == 'telco_info_mobifone':
         dataname = 'telco_info'
@@ -44,6 +44,16 @@ if __name__ == '__main__':
         level2 = 'vinaphone'
         tablename = 'DTTSD_TELCO_INFO'
         importMonth = 'telco_info_vinaphone.yaml'
+        schema = 'DTT_SD'
+        hp.init()
+        hp.load_params(dataname,tablename = tablename, level2 = level2, importMonth = importMonth, schema = schema)
+        hp.run_main(hp.cfg,source = 'ftp', mode = mode, fixlog_filename=None, run_downloadFile =False)
+
+    elif cfg == 'telco_bill_viettel_ftp':
+        dataname = 'telco_bill'
+        level2 = 'viettel'
+        tablename = 'DTTSD_TELCO_BILL'
+        importMonth = None
         schema = 'DTT_SD'
         hp.init()
         hp.load_params(dataname,tablename = tablename, level2 = level2, importMonth = importMonth, schema = schema)
