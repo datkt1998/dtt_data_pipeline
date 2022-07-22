@@ -14,6 +14,11 @@ from datpy.filetool.output_file import logs
 from munch import DefaultMunch
 
 def runtime(func):
+    """Decorator show time to run function
+
+    Args:
+        func (_type_): Function muốn tính time
+    """
     def func_wrapper(*args, **kwargs):
         start = datetime.now()
         res = func(*args, **kwargs)
@@ -23,6 +28,15 @@ def runtime(func):
     return func_wrapper
 
 def showlog(show = 'log', level = 'Error'):
+    """Lựa chọn muốn print ra trên console hay ghi vào file log
+
+    Args:
+        show (str, optional): show trên log hoặc print. Defaults to 'log'.
+        level (str, optional): level min muốn show. Defaults to 'Error'.
+
+    Returns:
+        _type_: _description_
+    """
     level = level.lower()
     if show == 'log':
         if level == 'error':
@@ -38,12 +52,19 @@ def showlog(show = 'log', level = 'Error'):
 
 
 class FtpServer:
+    """Setup kết nối tới FTP server
+    """
 
     def __init__(self, configs_database):
         self.configs_database = configs_database
         self.connect()
 
     def connect(self):
+        """Kết nối tới FTP server
+
+        Returns:
+            _type_: _description_
+        """
         self.ftp = ftplib.FTP(self.configs_database.hostname, 
                             self.configs_database.username, 
                             self.configs_database.password)
@@ -52,12 +73,29 @@ class FtpServer:
         return self.ftp
 
     def listfile(self,folder=None):
+        """list files tại currentdir hoặc specific dir
+
+        Args:
+            folder (_type_, optional): _description_. Defaults to None.
+
+        Returns:
+            _type_: _description_
+        """
         server = self.connect()
         if folder is not None:
             server.cwd(folder)
         return server.nlst()
 
     def listdir(self, folder = None, countfile = 0):
+        """list pathfile và subpathfile tại currentdir hoặc specific dir
+
+        Args:
+            folder (_type_, optional): _description_. Defaults to None.
+            countfile (int, optional): _description_. Defaults to 0.
+
+        Returns:
+            _type_: _description_
+        """
         server = self.connect()
         listdir = []
         if folder is not None:
@@ -83,6 +121,11 @@ class FtpServer:
 
 
 class FtpFile(FtpServer):
+    """Action cho 1 file nhất định trên ftp server
+
+    Args:
+        FtpServer (_type_): _description_
+    """
 
     def __init__(self, configs_database, filedirFTP, folderSaveLocal):
         super().__init__(configs_database)
@@ -92,6 +135,11 @@ class FtpFile(FtpServer):
         self.filedirLOCAL = os.path.join(self.folderLocal,self.filename)
 
     def getsize(self):
+        """Get thông tin size của file
+
+        Returns:
+            _type_: _description_
+        """
         a = self.connect()
         sizefile = a.size(self.filedirFTP)
         if sizefile > 1024**3:
@@ -104,6 +152,8 @@ class FtpFile(FtpServer):
             return "{} bytes".format(sizefile)
 
     def checkFolder(self):
+        """Remove all file tin folder save trên local, tránh trường hợp lưu nhiều gây đầy bộ nhớ
+        """
         Path(self.folderLocal).mkdir(parents=True, exist_ok=True)
         listfiles = os.listdir(self.folderLocal)
         for filename in listfiles:
@@ -112,6 +162,11 @@ class FtpFile(FtpServer):
 
     # @runtime
     def unpackFile(self,delZipFile=True):
+        """Giải nén file nếu dạng file ở dạng nén
+
+        Args:
+            delZipFile (bool, optional): _description_. Defaults to True.
+        """
         pathFile = self.filedirLOCAL
         try:
             Archive(pathFile,).extractall(os.path.dirname(pathFile))
@@ -129,6 +184,8 @@ class FtpFile(FtpServer):
 
     # @runtime
     def downloadFile(self):
+        """Download file từ ftp về local
+        """
         FTPdir = os.path.dirname(self.filedirFTP)
         sizefile = self.getsize()
         ftp = self.connect()
@@ -139,13 +196,19 @@ class FtpFile(FtpServer):
             hp.cfg['log'].info(f'Downloaded {self.filedirFTP} ({sizefile})')
 
     def process(self, run_download= True):
+        """Process chạy chính
+
+        Args:
+            run_download (bool, optional): _description_. Defaults to True.
+        """
         if run_download:
             self.checkFolder()
             self.downloadFile()
         self.getlistdir()
 
 class Database:
-
+    """Setup kết nối tới database oracle/sqlite và các thao tác: đọc, ghi, tạo, xóa, phân quyền
+    """
     def __init__(self, configs_database, show = 'log'):
         self.configs_database = DefaultMunch.fromDict(configs_database)
         self.show = show
@@ -204,12 +267,18 @@ class Database:
                 showlog(show = self.show, level = 'error')(f'Fail to created {tablename.upper()} table in {schema.upper()}')
 
     def getdtype(dataSchema):
+        """Convert dtype từ dict trên yaml sang sqlalchemy, tạo tham số khi đẩy dữ liệu lên database
+
+        Args:
+            dataSchema (_type_): _description_
+        """
         def convert_tool(x:str):
             if x.lower() == 'date':
                 return types.DATE()
             elif x.lower().startswith('varchar2'):
                 lenght_varchar2 = int(x[x.index("(")+1:x.index(")")])
                 return types.VARCHAR(lenght_varchar2)
+                # return types.CLOB()
             elif 'float' in x.lower() :
                 return types.FLOAT()
             elif 'integer' in x.lower() :
@@ -219,11 +288,12 @@ class Database:
     # @logs(logger = hp.cfg['log'])
     def upload(self,data,dataSchema,tablename:str, schema = None,chunksize = 5000,if_exists = 'append',filename = None):
         try:
-            dty = Database.getdtype(dataSchema)
+            dty = Database.getdtype(dataSchema) if dataSchema is not None else None
             data.to_sql(tablename.lower(),schema = schema, con = self.engine, if_exists = if_exists, 
                         chunksize = chunksize, index=False, dtype = dty)
             # hp.cfg['log'].info(f"Uploaded ('{if_exists}') data to {tablename.upper()} table in {schema.upper()} from {data.index[0]} to {data.index[-1]}")
         except Exception as e:
+            # raise e
             showlog(show = self.show, level = 'error')(f"Fail to upload data {filename} from {data.index[0]} to {data.index[-1]} with error: {e}")
 
 
@@ -251,7 +321,7 @@ class Database:
         # conn.close()
         print(f'Set {indexname} as index to {cols_list} in {tablename} !')
 
-    @runtime
+    # @runtime
     def read(self, table_name: str = None , col_name = "*" ,
         offset_rows : int = 0, n_records : int = -1, chunksize : int = None  , sql : str=None):
 

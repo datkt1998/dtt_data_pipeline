@@ -8,6 +8,7 @@ from datpy.helpers import helper as hp
 
 class Mylog:
     """
+    Setup trình ghi log
     # logging.debug("This is a debug message")
     # logging.info("This is an informational message")
     # logging.warning("Careful! Something does not look right")
@@ -22,10 +23,23 @@ class Mylog:
         self.filedir = self.gen_LogFile()
 
     def gen_LogFile(self,):
+        """Tạo log file
+
+        Returns:
+            _type_: _description_
+        """
         filename = 'logs_{}.log'.format(datetime.now().strftime("%Y_%m_%d_%H_%M"))
         return os.path.join(self.folder,filename)
 
     def get_logger(self, filedir = None):
+        """Tạo logger
+
+        Args:
+            filedir (_type_, optional): _description_. Defaults to None.
+
+        Returns:
+            _type_: _description_
+        """
         filedir = self.filedir if filedir is None else filedir
         log_format = "%(asctime)s|%(name)s|%(module)s(%(lineno)d)|%(levelname)s|>%(message)s"
         logging.basicConfig(filename=filedir, level=self.level, format=log_format,datefmt='%Y-%m-%d %H:%M:%S')
@@ -83,6 +97,14 @@ def logs(func=None,logger: Mylog = None, Success_message=None, Failure_message=N
 
 
 def OutputFolder(mainFolder = os.getcwd()):
+    """Tạo folder logs và save cho output folder
+
+    Args:
+        mainFolder (_type_, optional): _description_. Defaults to os.getcwd().
+
+    Returns:
+        _type_: _description_
+    """
     save = os.path.join(mainFolder,'save')
     Path(save).mkdir(parents=True, exist_ok=True)
     logfolder = os.path.join(mainFolder,'logs')
@@ -90,6 +112,16 @@ def OutputFolder(mainFolder = os.getcwd()):
     return save,logfolder
 
 def check_file_processed(listdir,logFolder, mode = None):
+    """Check file nào đã process và list ra các file chưa process trên ftp server
+
+    Args:
+        listdir (_type_): _description_
+        logFolder (_type_): _description_
+        mode (_type_, optional): _description_. Defaults to None.
+
+    Returns:
+        _type_: _description_
+    """
     processed_file = os.path.join(logFolder,'processed_filedir.csv')
     if os.path.exists(processed_file):
         processed_list = pd.read_csv(processed_file,sep="|")['filedir'].tolist()
@@ -105,6 +137,12 @@ def check_file_processed(listdir,logFolder, mode = None):
     return not_processed_list
 
 def write_processedFile(filedir = None,logFolder = None):
+    """Bổ sung tên file sau khi đã xử lý vào file thống kê processed_filedir.csv, tránh TH sau này xử lý lại
+
+    Args:
+        filedir (_type_, optional): _description_. Defaults to None.
+        logFolder (_type_, optional): _description_. Defaults to None.
+    """
     df = pd.DataFrame({'filedir':filedir,'process_datetime':str(datetime.now())},index=[0])
     output_file = os.path.join(logFolder,'processed_filedir.csv')
     df.to_csv(output_file,index=False,sep="|", mode='a', header=not os.path.exists(output_file))

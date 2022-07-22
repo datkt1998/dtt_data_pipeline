@@ -9,6 +9,8 @@ class MobifoneInfo(CleanProcess):
     
     source = "VENDOR_FTP_FILE"
     def __init__(self,filedir,cfg,rangeIndex=None):
+        self.filedir = filedir
+        self.cfg = cfg
         self.name = cfg['name_level2']
         self.rangeIndex = rangeIndex
         self.schema = cfg['schema']
@@ -16,9 +18,7 @@ class MobifoneInfo(CleanProcess):
         self.dataSchema = cfg['dataSchema']
         self.cols = self.dataSchema.keys()
         self.chunksize = 10000
-        self.filename = os.path.basename(filedir)
-        self.datacols = sorted(pd.read_csv(filedir, on_bad_lines='skip',sep = "|", nrows= 1).columns.tolist())
-        self.datachunk = pd.read_csv(filedir, on_bad_lines='skip',sep = "|", chunksize =self.chunksize)
+        self.sep = "|"
         self.rename_dict = {'thuebao':'PHONE_NUMBER',
                             'socmnd':'IDCARD',
                             'hoten':'FULLNAME',
@@ -29,6 +29,7 @@ class MobifoneInfo(CleanProcess):
                             'ngaythaydoi':'UPDATE_DATE',
                             'email':'EMAIL'}
         self.import_month = MobifoneInfo.get_IMPORT_MONTH(cfg['importMonth'])
+        self.filename, self.datacols, self.datachunk = self.getDataReader()
         self.validate_inputdata()
 
     def cleaning_pandas(self,data):
@@ -63,6 +64,7 @@ class MobifoneInfo(CleanProcess):
 class ViettelInfo(CleanProcess):
     name = 'Viettel'
     def __init__(self,filedir= None,cfg = None,rangeIndex=None):
+        self.cfg = cfg
         self.rangeIndex = rangeIndex
         self.schema = cfg['schema']
         self.tablename = cfg['tablename']
@@ -71,15 +73,7 @@ class ViettelInfo(CleanProcess):
         self.chunksize = 10000
         self.filedir = filedir
         self.import_month = cfg['importMonth']
-        if self.filedir is not None:
-            self.filename = os.path.basename(filedir)
-            self.datacols = sorted(pd.read_csv(filedir, on_bad_lines='skip',sep = "|", nrows= 1).columns.tolist())
-            self.datachunk = pd.read_csv(filedir, on_bad_lines='skip',sep = "|", chunksize =self.chunksize)
-        else: # oracle
-            self.filename = cfg['folder_config'].db_source.tablename
-            self.datacols = sorted(cfg['source_oracle_server'].read(table_name=self.filename, n_records = 1).columns.tolist())
-            self.datachunk = cfg['source_oracle_server'].read(table_name=self.filename, chunksize = self.chunksize)
-
+        self.sep = ","
         self.rename_dict = {'MSISDN':'PHONE_NUMBER',
                             'NAME': 'FULLNAME',
                             'BIRTH_DATE':"DOB",
@@ -97,6 +91,7 @@ class ViettelInfo(CleanProcess):
                             'UPDATE_DATE':'UPDATE_DATE',
                             'IMPORT_MONTH':'IMPORT_MONTH'}
         self.rename_dict = {i.upper():self.rename_dict[i] for i in self.rename_dict}
+        self.filename, self.datacols, self.datachunk = self.getDataReader()
         self.validate_inputdata()
 
     def cleaning_pandas(self,data):
@@ -139,6 +134,8 @@ class ViettelInfo(CleanProcess):
 class VinaphoneInfo(CleanProcess):
     name = 'Vinaphone'
     def __init__(self,filedir= None,cfg = None,rangeIndex=None):
+        self.cfg = cfg
+        self.sep = "|"
         self.rangeIndex = rangeIndex
         self.schema = cfg['schema']
         self.tablename = cfg['tablename']
@@ -146,17 +143,7 @@ class VinaphoneInfo(CleanProcess):
         self.cols = self.dataSchema.keys()
         self.chunksize = 10000
         self.filedir = filedir
-        if self.filedir is not None:
-            self.filename = os.path.basename(filedir)
-            self.datacols = sorted(pd.read_csv(filedir, on_bad_lines='skip',sep = "|", nrows= 1).columns.tolist())
-            self.datachunk = pd.read_csv(filedir, on_bad_lines='skip',sep = "|", chunksize =self.chunksize)
-            self.import_month = cfg['importMonth'][self.filename]
-        else:
-            self.filename = cfg['folder_config'].db_source.tablename
-            self.datacols = sorted(cfg['source_oracle_server'].read(table_name=self.filename, n_records = 1).columns.tolist())
-            self.datachunk = cfg['source_oracle_server'].read(table_name=self.filename, chunksize = self.chunksize)
-            self.import_month = None
-
+        self.import_month = cfg['importMonth'][self.filename]
         self.rename_dict = {'TEN': 'FULLNAME',
                             'NGAY_SINH':"DOB",
                             'DIA_CHI':"ADDRESS",
@@ -178,6 +165,7 @@ class VinaphoneInfo(CleanProcess):
                             'NHA_SAN_XUAT':"NHA_SAN_XUAT", 
                             'NGAY_CAP_CMT':"IDCARD_ISSUEDATE"}
         self.rename_dict = {i.upper():self.rename_dict[i] for i in self.rename_dict}
+        self.filename, self.datacols, self.datachunk = self.getDataReader()
         self.validate_inputdata()
 
     def cleaning_pandas(self,data):

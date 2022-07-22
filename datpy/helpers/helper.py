@@ -12,6 +12,9 @@ from tqdm import tqdm
 # import time
 
 def init():
+    """
+    khởi tạo config chạy global khi run main
+    """
     global cfg
     cfg = {}
 
@@ -19,6 +22,9 @@ def _path(*args):
     return os.path.normpath(os.path.join(*args))
 
 def load_module(path, classname):
+    """
+    load class xử lý tùy theo config, dạng data
+    """
     folderpath = os.path.dirname(path)
     filename = os.path.basename(path).split('.')[0]
     sys.path.append(folderpath)
@@ -29,11 +35,11 @@ def setup_log():
     pass
 
 def get_IMPORT_MONTH(importMonth):
+    """
+    Chuẩn hóa lại import month tùy theo loại truyền vào là gì
+    """
     if importMonth is None:
         return None
-
-    # if importMonth is None:
-    #     return datetime.now().strftime('%Y%m')
     elif importMonth.endswith('.yaml'):
         return cf.Config(os.path.join(os.getcwd(),'configs',importMonth)).read(doc = 0, munch = False)['importMonth']
     else:
@@ -41,6 +47,9 @@ def get_IMPORT_MONTH(importMonth):
 
 
 def load_params(dataname,tablename = None, level2 = None, importMonth = None, schema = 'DTTSD'):
+    """
+    update các thông tin cho cfg global
+    """
     level2 = level2.lower() if level2 is not None else level2
     importMonth =  get_IMPORT_MONTH(importMonth)
     RUNDIR = os.getcwd()
@@ -75,7 +84,7 @@ def load_params(dataname,tablename = None, level2 = None, importMonth = None, sc
     cfg['ftp_server']=ftp_server
     cfg['oracle_server']=oracle_server
 
-    if folder_config.db_source is not None:
+    if folder_config.db_source is not None: # bổ sung thông tin config db_source nếu dữ liệu input trên database
         source_oracle_server = cn.Database(folder_config.db_source)
         cfg['source_oracle_server'] = source_oracle_server
     
@@ -88,19 +97,37 @@ def load_params(dataname,tablename = None, level2 = None, importMonth = None, sc
 
 # @cn.runtime
 def run_main(cfg, run_downloadFile=True, source = 'ftp', mode = 'run_new', fixlog_filename = None):
+    """Hàm chạy chính sau khi đã load config global
+
+    Args:
+        cfg (_type_): config global
+        run_downloadFile (bool, optional): Có download file từ ftp server hay không ?. Defaults to True.
+        source (str, optional): nguồn dữ liệu input là ftp hoặc oracle. Defaults to 'ftp'.
+        mode (str, optional): mode chạy dữ liệu mới hay fix_log. Defaults to 'run_new'.
+        fixlog_filename (_type_, optional): tên file log nếu sử dụng mode fix_log. Defaults to None.
+    """
+
+    #load các error nếu chạy mode fix_log
     fixlog_dir = os.path.join(cfg['logfolder'],fixlog_filename) if fixlog_filename is not None else None
     fixlog_object = fixlog(fixlog_dir).fixlog_object() if fixlog_dir is not None else None
     
     if source == 'ftp':
+        # thống kê các file chưa được xử lý, bỏ đi các file đã xử lý rồi
         not_process_filefir = of.check_file_processed(cfg['ftp_server'].listdir(cfg['ftp_folder']),cfg['logfolder'])
         if fixlog_object is not None:
             not_process_filefir = [i for i in not_process_filefir if os.path.basename(i) in fixlog_object.keys()]
-        for zipf in tqdm(not_process_filefir,desc = 'FTP file:', position = 0):
+        not_process_filefir = not_process_filefir[:1] if not run_downloadFile else not_process_filefir
+
+        ftp_dir = ".../"+"/".join(cfg['ftp_folder'].split('/')[-3:])
+        for zipf in tqdm(not_process_filefir,desc = ftp_dir, position = 0):
+            # download file từ ftp và giải nén
             cfg['ftp_filedir'] = zipf
             download_file = cn.FtpFile(cfg['CONFIG'].database.db_source, zipf, cfg['savefolder'])
             download_file.process(run_download = run_downloadFile)
             unpacked_file = download_file.unpack_filelist
-            for file in tqdm(unpacked_file, desc = 'Unpacked file:', position = 1, leave = False):
+            unpacked_filename = os.path.basename(zipf)
+            
+            for file in tqdm(unpacked_file, desc = unpacked_filename, position = 1, leave = False):
                 if mode == 'run_new':
                     read_file = cfg['run_class'](file,cfg)
                     read_file.process(cfg['oracle_server'])

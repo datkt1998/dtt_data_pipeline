@@ -10,12 +10,12 @@ database:
     port: "1521"
     service_name: "DTT"
     username: "dtt_sd"
-    password: "hct5Kg"
+    password: ""
   db_source:
     type: "ftp"
     hostname: "192.168.40.8"
     username: "datatech"
-    password: "datatech@123456"
+    password: ""
 
 folder:
   project: "../.."
@@ -122,9 +122,9 @@ data:
       vinaphone:
         name: 'Vinaphone'
         filecode: "datacode/3_telco/2_bill/telco_bill.py"
-        classname: 'VinaphoneBill'
+        classname: 'VinaphoneBill_ftp'
         local_output: "../../2. DATA/3_telco/2_bill/2_vinaphone"
-        ftp_store: "array1/datatech/1. TELCO/Bill Telco"
+        ftp_store: "array1/datatech/1. TELCO/Bill Telco/2022/Vina"
     dataSchema:
       DTT_SD:
         DTTSD_TELCO_BILL:

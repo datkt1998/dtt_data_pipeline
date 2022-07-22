@@ -2,6 +2,9 @@ import argparse
 from datpy.helpers import helper as hp
 
 def parse_args():
+    """
+    Cấu hình tham số khi chạy trên terminal
+    """
     parser = argparse.ArgumentParser(description="Run mode 'run_new' or 'fix_log'")
     parser.add_argument('--mode', nargs='?', default='run_new') # ['run_new','fix_log']
     parser = argparse.ArgumentParser(description="Choose the config to run")
@@ -15,9 +18,9 @@ if __name__ == '__main__':
     # cfg = args.cfg
     # mode = args.mode
     # fixlog_filename = args.logname
-    cfg = 'telco_bill_viettel_ftp'
+    cfg = 'telco_bill_vinaphone_ftp'
     mode = 'run_new'
-    fixlog_filename = None #'logs_2022_07_11_11_56.log'
+    fixlog_filename = None #'logs_2022_07_20_18_54.log'
 
     if cfg == 'telco_info_mobifone':
         dataname = 'telco_info'
@@ -47,7 +50,7 @@ if __name__ == '__main__':
         schema = 'DTT_SD'
         hp.init()
         hp.load_params(dataname,tablename = tablename, level2 = level2, importMonth = importMonth, schema = schema)
-        hp.run_main(hp.cfg,source = 'ftp', mode = mode, fixlog_filename=None, run_downloadFile =False)
+        hp.run_main(hp.cfg,source = 'ftp', mode = mode, fixlog_filename=fixlog_filename, run_downloadFile =False)
 
     elif cfg == 'telco_bill_viettel_ftp':
         dataname = 'telco_bill'
@@ -57,4 +60,14 @@ if __name__ == '__main__':
         schema = 'DTT_SD'
         hp.init()
         hp.load_params(dataname,tablename = tablename, level2 = level2, importMonth = importMonth, schema = schema)
-        hp.run_main(hp.cfg,source = 'ftp', mode = mode, fixlog_filename=None, run_downloadFile =False)
+        hp.run_main(hp.cfg,source = 'ftp', mode = mode, fixlog_filename=fixlog_filename, run_downloadFile = True)
+
+    elif cfg == 'telco_bill_vinaphone_ftp':
+        dataname = 'telco_bill'
+        level2 = 'vinaphone'
+        tablename = 'DTTSD_TELCO_BILL'
+        importMonth = None
+        schema = 'DTT_SD'
+        hp.init()
+        hp.load_params(dataname,tablename = tablename, level2 = level2, importMonth = importMonth, schema = schema)
+        hp.run_main(hp.cfg,source = 'ftp', mode = mode, fixlog_filename=fixlog_filename, run_downloadFile = False)

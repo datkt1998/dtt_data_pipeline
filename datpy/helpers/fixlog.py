@@ -2,6 +2,9 @@ import pandas as pd
 import re
 
 class fixlog:
+    """
+    Phân tích file log, thống kê các error
+    """
 
     def __init__(self, logpath):
         self.logpath = logpath

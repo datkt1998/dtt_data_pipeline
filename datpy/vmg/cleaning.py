@@ -13,6 +13,11 @@ from datpy.web.web_action import download_mapping_telco
 
 
 class address:
+    """function với thông tin địa chỉ
+
+    Returns:
+        _type_: _description_
+    """
 
     list_province = ['An Giang', 'Bà Rịa - Vũng Tàu', 'Bạc Liêu', 'Bắc Giang', 
     'Bắc Kạn', 'Bắc Ninh', 'Bến Tre', 'Bình Dương', 'Bình Định', 'Bình Phước', 
@@ -46,6 +51,17 @@ class address:
         max_data=500,
         if_error= None #VNAddressStandardizer
     ):
+        """Phân tách địa chỉ thành các level
+
+        Args:
+            data (_type_): dữ liệu địa chỉ hoặc list địa chỉ
+            key_return (list, optional): các level muốn get. Defaults to [ "ward_short", "district_short","province_short"].
+            max_data (int, optional): số lượng địa chỉ gửi lên tối đa cho 1 request API. Defaults to 500.
+            if_error (_type_, optional): kết quả trả Nếu lỗi . Defaults to None#VNAddressStandardizer.
+
+        Returns:
+            _type_: _description_
+        """
         headers = {"Accept": "application/json", "Content-Type": "application/json"}
         res = None
 
@@ -99,6 +115,14 @@ class address:
             raise
     
     def standardize(data):
+        """Chuẩn hóa địa chỉ
+
+        Args:
+            data (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
         res = address.splitAdress(data)
         if type(data) == list:
             return list(map(lambda x: ", ".join(x),res))
@@ -106,7 +130,14 @@ class address:
             return ", ".join(res)
 
     def get_province(address_data:str):
+        """Xác định tỉnh thành từ địa chỉ
 
+        Args:
+            address_data (str): _description_
+
+        Returns:
+            _type_: _description_
+        """
         if (address_data != address_data) or (address_data is None):
             return np.nan
 
@@ -131,6 +162,15 @@ class address:
 
     # Phan tich Address
     def address_compare_score(A, B):
+        """So sánh 2 địa chỉ A và B
+
+        Args:
+            A (_type_): _description_
+            B (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
         A_split = np.array([unidecode(x) for x in address.splitAdress(A)])
         B_split = np.array([unidecode(x) for x in address.splitAdress(B)])
         score = np.cumprod(A_split == B_split).sum()
@@ -138,7 +178,8 @@ class address:
 
 
 class text:
-
+    """Chuẩn hóa dữ liệu text
+    """
     def __init__(self,value):
         self.value = str(value)
     
@@ -163,6 +204,9 @@ class text:
             return res
 
     def remove_punctuation(str_data):
+        """
+        Xóa bỏ ký tự đặc biệt và đuôi float .0
+        """
         str_data = str(str_data).replace("  "," ").strip()
         for e in ['.0','.00',',0',',00']:
             if str_data.endswith(e):
@@ -172,6 +216,11 @@ class text:
         return str_data
 
     def clean(self):
+        """Convert nan/none value ở dạng string thành NaN
+
+        Returns:
+            _type_: _description_
+        """
         x = self.value
         if type(x)==str:
             list_nan_encrypt =[
@@ -350,6 +399,14 @@ class IDcard(text):
         super().__init__(value)
 
     def cleankey(self,error = 'ignore') :
+        """Làm sạch input
+
+        Args:
+            error (str, optional): _description_. Defaults to 'ignore'.
+
+        Returns:
+            _type_: _description_
+        """
         value = self.clean()
         if type(value) == str:
             try:
@@ -377,6 +434,8 @@ class IDcard(text):
             return [IDcard(i).cleankey(error = error) for i in value]
 
     def typeIDcode(self,):
+        """Trả ra mã code của ID theo nhóm
+        """
         def isAllNumber(text):
             text = str(text)
             for char in text:
@@ -475,9 +534,22 @@ class IDcard(text):
         return get_codetypeID(self.cleankey())
     
     def typeIDraw(self):
+        """Trả ra type of ID raw
+
+        Returns:
+            _type_: _description_
+        """
         return IDcard.typeError[self.typeIDcode()]
 
     def typeIDstandard(self,error = 'ignore'):
+        """Trả ra type of ID sau khi chuẩn hóa
+
+        Args:
+            error (str, optional): _description_. Defaults to 'ignore'.
+
+        Returns:
+            _type_: _description_
+        """
         cleaned = self.cleankey(error=error)
         typeID = self.typeIDcode()
         if ((typeID =='3') and (len(cleaned) == 12)) or (typeID =='7'):
@@ -492,6 +564,15 @@ class IDcard(text):
             return IDcard.typeStandard['5']
 
     def standardize(self,error = 'ignore', encrypt = False):
+        """Hàm chuẩn hóa ID
+
+        Args:
+            error (str, optional): _description_. Defaults to 'ignore'.
+            encrypt (bool, optional): _description_. Defaults to False.
+
+        Returns:
+            _type_: _description_
+        """
         cleaned = self.cleankey(error=error)
         cleaned = cleaned.upper() if type(cleaned) == str else cleaned
         typeID = self.typeIDcode()
@@ -512,6 +593,11 @@ class IDcard(text):
         return res
 
 class Phone(text):
+    """Lấy thông tin từ 1 số điện thoại
+
+    Args:
+        text (_type_): _description_
+    """
 
     def __init__(self,value = None, dialcode = "84", error = 'ignore', encrypt = False):
         super().__init__(value)
@@ -541,6 +627,14 @@ class Phone(text):
         self.cleaned = self.standardize()
 
     def cleankey(self):
+        """Hàm làm sạch input
+
+        Raises:
+            ValueError: _description_
+
+        Returns:
+            _type_: _description_
+        """
         self.typephone = 'unknown'
         dialcode = self.dialcode
         def isAllNumber(text):
@@ -595,6 +689,11 @@ class Phone(text):
             return cleaned
 
     def standardize(self):
+        """Hàm chuẩn hóa SĐT
+
+        Returns:
+            _type_: _description_
+        """
         try:
             res = self.dialcode + self.cleankey()
         except:
@@ -607,6 +706,16 @@ class Phone(text):
         return res
 
     def pay_type(paytype):
+        """Hàm chuẩn hóa thông tin paytype
+
+        Args:
+            paytype (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
+        if paytype != paytype:
+            return np.nan
         paytype = unidecode(text(paytype).clean()).lower()
         if len([i for i in ['pre','truoc','tt'] if i in paytype])>0:
             return 'prepaid'
@@ -616,6 +725,11 @@ class Phone(text):
             return np.nan
 
     def map_telco(list_of_phonenumbers):
+        """Hàm get thông tin nhà mạng từ 1 list SĐT từ web brandname
+
+        Args:
+            list_of_phonenumbers (_type_): _description_
+        """
         def merge_mapping_telco( filedir ):
             mapped = pd.DataFrame()
             with pd.ExcelFile(filedir) as excelFile:
@@ -641,10 +755,13 @@ class Phone(text):
         return data_res
 
 class Person:
+    """Chuẩn hóa thông tin của người
+    """
     def __init__(self):
         pass
 
     def gender_standardize(gender):
+        """Chuẩn hóa giới tính"""
         if gender != gender:
             return np.nan
         gender = unidecode(text(gender).clean()).lower()
@@ -656,6 +773,14 @@ class Person:
             return np.nan
     
     def birthyear_standardize(birthyear):
+        """Chuẩn hóa năm sinh
+
+        Args:
+            birthyear (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
         res = np.nan
         try:
             str_birthyear = text.remove_punctuation(text(str(birthyear)).clean())
@@ -672,6 +797,11 @@ class Person:
 #%%
 
 class SI(text):
+    """Chuẩn hóa mã số BHXH
+
+    Args:
+        text (_type_): _description_
+    """
     def __init__(self,value):
         super().__init__(value)
 
